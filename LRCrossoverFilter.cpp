@@ -1,4 +1,5 @@
 // https://www.musicdsp.org/en/latest/Filters/266-4th-order-linkwitz-riley-filters.html
+// © All credits go to the contributors at musicdsp.org
 
 #include <iostream>
 #include <stdio.h>
@@ -6,10 +7,12 @@
 #include <assert.h>
 
 #include "LRCrossoverFilter.h"
-#include "HardClip.h"
 
 
 void LRCrossoverFilter::setup(float crossoverFrequency, float sr) {
+
+	// coefficient calculations are all changed to double
+	// for filter stability at low frequencies
 
 	const double pi = 3.141592654f;
 
@@ -103,7 +106,7 @@ void LRCrossoverFilter::process(float in, float * outHP, float * outLP) {
 	hptemp.ym1 = tempy;
 	*outHP = tempy;
 
-	//assert(tempy < 10000000);
+	// assert(tempy < 10000000);
 
 	// Low pass
 
@@ -127,80 +130,5 @@ void LRCrossoverFilter::process(float in, float * outHP, float * outLP) {
 	lptemp.ym1 = tempy;
 	*outLP = tempy;
 
-	//assert(!isnan(outLP[i]));
+	// assert(!isnan(*outLP));
 }
-
-// UNUSED
-void LRCrossoverFilter::processBlock(float * in, float * outHP, float * outLP, int numSamples) {
-	float tempx, tempy;
-	for (int i = 0; i < numSamples; i++) {
-		tempx = in[i];
-
-		// High pass
-
-		tempy = hpco.a0*tempx +
-			hpco.a1*hptemp.xm1 +
-			hpco.a2*hptemp.xm2 +
-			hpco.a3*hptemp.xm3 +
-			hpco.a4*hptemp.xm4 -
-			b1co * hptemp.ym1 -
-			b2co * hptemp.ym2 -
-			b3co * hptemp.ym3 -
-			b4co * hptemp.ym4;
-
-		hptemp.xm4 = hptemp.xm3;
-		hptemp.xm3 = hptemp.xm2;
-		hptemp.xm2 = hptemp.xm1;
-		hptemp.xm1 = tempx;
-		hptemp.ym4 = hptemp.ym3;
-		hptemp.ym3 = hptemp.ym2;
-		hptemp.ym2 = hptemp.ym1;
-		hptemp.ym1 = tempy;
-		outHP[i] = tempy;
-
-		//assert(tempy < 10000000);
-
-		// Low pass
-		
-		tempy = lpco.a0*tempx +
-			lpco.a1*lptemp.xm1 +
-			lpco.a2*lptemp.xm2 +
-			lpco.a3*lptemp.xm3 +
-			lpco.a4*lptemp.xm4 -
-			b1co * lptemp.ym1 -
-			b2co * lptemp.ym2 -
-			b3co * lptemp.ym3 -
-			b4co * lptemp.ym4;
-
-		lptemp.xm4 = lptemp.xm3; // these are the same as hptemp and could be optimised away
-		lptemp.xm3 = lptemp.xm2;
-		lptemp.xm2 = lptemp.xm1;
-		lptemp.xm1 = tempx;
-		lptemp.ym4 = lptemp.ym3;
-		lptemp.ym3 = lptemp.ym2;
-		lptemp.ym2 = lptemp.ym1;
-		lptemp.ym1 = tempy;
-		outLP[i] = tempy;
-
-		//assert(!isnan(outLP[i]));
-		
-	}
-}
-
-
-/*
-int main () {
-	LRCrossoverFilter filter;
-	float data[2000];
-	float lp[2000], hp[2000];
-
-	filter.setup(50.0, 44100.0f);
-	filter.dumpInformation();
-
-	for (int i = 0; i<2000; i++) {
-		data[i] = sinf(i/100.f);
-	}
-	filter.processBlock(data, hp, lp, 2000);
-
-}
-*/

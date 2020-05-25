@@ -1,3 +1,6 @@
+// https://www.musicdsp.org/en/latest/Filters/266-4th-order-linkwitz-riley-filters.html
+// © All credits go to the contributors at musicdsp.org
+
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
@@ -6,6 +9,10 @@
 
 class LRCrossoverFilter { // LR4 crossover filter
 private:
+
+	// coefficient calculations are all changed to double
+	// for filter stability at low frequencies
+
 	struct filterCoefficents {
 		double a0, a1, a2, a3, a4;
 	} lpco, hpco;
@@ -25,24 +32,6 @@ public:
 	void setup(float crossoverFrequency, float sr);
 	void copyCoefficientsFrom(LRCrossoverFilter filter);
 	void process(float in, float * outHP, float * outLP);
-	void processBlock(float * in, float * outHP, float * outLP, int numSamples);
-	void dumpCoefficents(struct filterCoefficents x) {
-		std::cout << "a0: " << x.a0 << "\n";
-		std::cout << "a1: " << x.a1 << "\n";
-		std::cout << "a2: " << x.a2 << "\n";
-		std::cout << "a3: " << x.a3 << "\n";
-		std::cout << "a4: " << x.a4 << "\n";
-	}
-	void dumpInformation() {
-		std::cout << "-----\nfrequency: " << coFreqRunningAv << "\n";
-		std::cout << "lpco:\n";
-		dumpCoefficents(lpco);
-		std::cout << "hpco:\n";
-		dumpCoefficents(hpco);
-		std::cout << "bco:\nb1: ";
-		std::cout << b1co << "\nb2: " << b2co << "\nb3: " << b3co << "\nb4: " << b4co << "\n";
-	}
-
 	float getCrossover() {
 		return coFreqRunningAv;
 	}

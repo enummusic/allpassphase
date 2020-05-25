@@ -1,26 +1,20 @@
 //-------------------------------------------------------------------------------------------------------
-// VST Plug-Ins SDK
-// Version 2.4		$Date: 2005/11/30 13:04:21 $
+// $Date: 2020/05/24 00:00:00 $
 //
-// Category     : VST 2.x SDK Samples
-// Filename     : adelay.cpp
-// Created by   : Steinberg Media Technologies
-// Description  : Simple Delay plugin (Mono->Stereo)
+// Filename     : CrossoverPhase.cpp
+// Created by   : enummusic
+// Description  : Crossover filter phase dispersion
 //
-// © 2005, Steinberg Media Technologies, All Rights Reserved
+// © 2020 enummusic
+// VST SDK © 2005, Steinberg Media Technologies, All Rights Reserved
 //-------------------------------------------------------------------------------------------------------
 
 #include <stdio.h>
-
-#include <sstream>
-
 #include <math.h>
-//#include <assert.h>
 
 #ifndef __CrossoverPhase__
 #include "CrossoverPhase.h"
 
-//#include "LRCrossoverFilter.h"
 #include "HardClip.h"
 #endif
 
