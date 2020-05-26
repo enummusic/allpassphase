@@ -90,7 +90,6 @@ protected:
 	float *buffer;
 	float fFrequency, fIterations, fOut, fClip;
 	
-	
 	long delay;
 	long size;
 	long cursor;
@@ -103,6 +102,11 @@ protected:
 	int curIterations;
 
 	int samplesSinceAdjustment = 0;
+	int samplesSinceSilence = 1;
+	const int deactivateAfterSamples = 16384;
+	const float noiseFloor = 0.000007; // -113dB ish, idk it just works lol
+
+	//float dbginfo = 0;
 };
 
 #endif

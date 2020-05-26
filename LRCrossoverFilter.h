@@ -12,7 +12,7 @@ private:
 
 	// coefficient calculations are all changed to double
 	// for filter stability at low frequencies
-
+	double tempx, tempyH, tempyL;
 	struct filterCoefficents {
 		double a0, a1, a2, a3, a4;
 	} lpco, hpco;
@@ -25,13 +25,13 @@ private:
 		double xm3 = 0.0f;
 		double xm4 = 0.0f;
 		double ym1 = 0.0f, ym2 = 0.0f, ym3 = 0.0f, ym4 = 0.0f;
-	} hptemp, lptemp;
+	} hptemp, lptemp, temp;
 
 	float coFreqRunningAv = 100.0f;
 public:
 	void setup(float crossoverFrequency, float sr);
 	void copyCoefficientsFrom(LRCrossoverFilter filter);
-	void process(float in, float * outHP, float * outLP);
+	void processBlock(float * in, float * outHP, float * outLP, int numSamples);
 	float getCrossover() {
 		return coFreqRunningAv;
 	}

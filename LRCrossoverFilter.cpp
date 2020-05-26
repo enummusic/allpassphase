@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
+#include <thread>
 
 #include "LRCrossoverFilter.h"
 
@@ -79,56 +80,50 @@ void LRCrossoverFilter::copyCoefficientsFrom(LRCrossoverFilter filter) {
 	b4co = filter.b4co;
 }
 
-void LRCrossoverFilter::process(float in, float * outHP, float * outLP) {
+void LRCrossoverFilter::processBlock(float * in, float * outHP, float * outLP, int numSamples) {
+	float tempx, tempy;
+	for (int i = 0; i < numSamples; i++) {
+		tempx = in[i];
 
-	double tempx, tempy;
-	tempx = in;
+		// High pass
+		tempyH = hpco.a0*tempx +
+			hpco.a1*temp.xm1 +
+			hpco.a2*temp.xm2 +
+			hpco.a3*temp.xm3 +
+			hpco.a4*temp.xm4 -
+			b1co * hptemp.ym1 -
+			b2co * hptemp.ym2 -
+			b3co * hptemp.ym3 -
+			b4co * hptemp.ym4;
 
-	// High pass
+		hptemp.ym4 = hptemp.ym3;
+		hptemp.ym3 = hptemp.ym2;
+		hptemp.ym2 = hptemp.ym1;
+		hptemp.ym1 = tempyH;
 
-	tempy = hpco.a0*tempx +
-		hpco.a1*hptemp.xm1 +
-		hpco.a2*hptemp.xm2 +
-		hpco.a3*hptemp.xm3 +
-		hpco.a4*hptemp.xm4 -
-		b1co * hptemp.ym1 -
-		b2co * hptemp.ym2 -
-		b3co * hptemp.ym3 -
-		b4co * hptemp.ym4;
+		outHP[i] = tempyH;
 
-	hptemp.xm4 = hptemp.xm3;
-	hptemp.xm3 = hptemp.xm2;
-	hptemp.xm2 = hptemp.xm1;
-	hptemp.xm1 = tempx;
-	hptemp.ym4 = hptemp.ym3;
-	hptemp.ym3 = hptemp.ym2;
-	hptemp.ym2 = hptemp.ym1;
-	hptemp.ym1 = tempy;
-	*outHP = tempy;
+		// Low pass
+		tempyL = lpco.a0*tempx +
+			lpco.a1*temp.xm1 +
+			lpco.a2*temp.xm2 +
+			lpco.a3*temp.xm3 +
+			lpco.a4*temp.xm4 -
+			b1co * lptemp.ym1 -
+			b2co * lptemp.ym2 -
+			b3co * lptemp.ym3 -
+			b4co * lptemp.ym4;
 
-	// assert(tempy < 10000000);
+		lptemp.ym4 = lptemp.ym3;
+		lptemp.ym3 = lptemp.ym2;
+		lptemp.ym2 = lptemp.ym1;
+		lptemp.ym1 = tempyL;
 
-	// Low pass
+		temp.xm4 = temp.xm3;
+		temp.xm3 = temp.xm2;
+		temp.xm2 = temp.xm1;
+		temp.xm1 = tempx;
 
-	tempy = lpco.a0*tempx +
-		lpco.a1*lptemp.xm1 +
-		lpco.a2*lptemp.xm2 +
-		lpco.a3*lptemp.xm3 +
-		lpco.a4*lptemp.xm4 -
-		b1co * lptemp.ym1 -
-		b2co * lptemp.ym2 -
-		b3co * lptemp.ym3 -
-		b4co * lptemp.ym4;
-
-	lptemp.xm4 = lptemp.xm3; // these are the same as hptemp and could be optimised away
-	lptemp.xm3 = lptemp.xm2;
-	lptemp.xm2 = lptemp.xm1;
-	lptemp.xm1 = tempx;
-	lptemp.ym4 = lptemp.ym3;
-	lptemp.ym3 = lptemp.ym2;
-	lptemp.ym2 = lptemp.ym1;
-	lptemp.ym1 = tempy;
-	*outLP = tempy;
-
-	// assert(!isnan(*outLP));
+		outLP[i] = tempyL;
+	}
 }

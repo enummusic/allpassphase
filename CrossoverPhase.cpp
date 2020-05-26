@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <thread>
 
 #ifndef __CrossoverPhase__
 #include "CrossoverPhase.h"
@@ -190,11 +191,20 @@ void CrossoverPhase::getParameterDisplay (VstInt32 index, char *text)
 	switch (index)
 	{
 		//case kDelay :    int2string (delay, text, kVstMaxParamStrLen);			break;
-		case kFrequency:    int2string(crossover, 
-			text, 5);			break;
-		case kIterations : int2string(curIterations,
-			text, 5);			break;
-		case kOut :      mydB2string (fOut, text, kVstMaxParamStrLen);			break;
+		case kFrequency:
+			int2string(crossover, text, 5);
+			break;
+		case kIterations:
+			if (curIterations == 0) {
+				strcpy(text, "BYPASS");
+			}
+			else {
+				int2string(curIterations, text, 5);
+			}
+			break;
+		case kOut:
+			mydB2string (fOut, text, kVstMaxParamStrLen);
+			break;
 		case kClip:
 			if (fClip >= 0.5) {
 				strcpy(text, "ON");
@@ -214,6 +224,7 @@ void CrossoverPhase::getParameterLabel (VstInt32 index, char *label)
 		case kIterations : strcpy (label, "iterations");	break;//amount
 		case kOut :      strcpy (label, "dB");		break;
 		case kClip:      strcpy(label, " ");		break;
+		//case kClip:      float2string(dbginfo, label, kVstMaxParamStrLen);		break;
 	}
 }
 
@@ -244,7 +255,7 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 {
 	// setup filter coefficients
 	crossover = pow(200, fFrequency) * 100;
-	if (filterL[0].getCrossover() != crossover || (int) (fIterations * 50) != curIterations) {//
+	if (filterL[0].getCrossover() != crossover || (int) (fIterations * 50) != curIterations) {
 		filterL[0].setup(crossover, 44100.0f);
 		filterR[0].setup(crossover, 44100.0f);
 		for (int i = 0; i < fIterations * 50; i++)	{
@@ -260,47 +271,93 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 	float* out1 = outputs[0];
 	float* out2 = outputs[1];
 
-	float leftLp;
-	float leftHp;
-	float rightLp;
-	float rightHp;
-
 	float *temp1{ new float[sampleFrames] {} };
 	float *temp2{ new float[sampleFrames] {} };
 	int samples = sampleFrames;
 
 	// copy input to temp array
 	while (--samples >= 0) {
-		*temp1++ = *in1++;
-		*temp2++ = *in2++;
+		*temp1 = *in1++;
+		*temp2 = *in2++;
+		// checks the whole buffer
+		// if it sees anything that isn't silence, reset the silence counter
+		// ensures the entire buffer is processed
+		if (abs(*temp1) >= noiseFloor || abs(*temp2) >= noiseFloor) {
+			samplesSinceSilence = 0;
+		}
+		temp1++;
+		temp2++;
 	}
 
 	// reset pointers
 	temp1 -= sampleFrames;
 	temp2 -= sampleFrames;
 	samples = sampleFrames;
-
-	// filter the audio
-	for (int i = 0; i < curIterations; i++) {
-		while (--samples >= 0)
-		{
-			filterL[i].process(*temp1, &leftHp, &leftLp);
-			filterR[i].process(*temp2, &rightHp, &rightLp);
-			*temp1++ = (leftLp + leftHp);
-			*temp2++ = (rightLp + rightHp);
+	
+	// multithreading actually increases CPU overhead
+	// by the repeated creation and destruction of threads during every incoming buffer
+	// so it isn't worth it
+	/*
+	std::thread leftT([this, temp1, &leftHp, &leftLp, sampleFrames]() mutable {
+		int s = sampleFrames;
+		for (int i = 0; i < curIterations; i++) {
+			while (--s >= 0)
+			{
+				filterL[i].process(*temp1, &leftHp, &leftLp);
+				*temp1++ = (leftLp + leftHp);
+			}
+			s = sampleFrames;
+			temp1 -= sampleFrames;
 		}
-		samples = sampleFrames;
-		temp1 -= sampleFrames;
-		temp2 -= sampleFrames;
+	});
+
+	std::thread rightT([this, temp2, &rightHp, &rightLp, sampleFrames]() mutable {
+		int s = sampleFrames;
+		for (int i = 0; i < curIterations; i++) {
+			while (--s >= 0)
+			{
+				filterR[i].process(*temp2, &rightHp, &rightLp);
+				*temp2++ = (rightLp + rightHp);
+			}
+			s = sampleFrames;
+			temp2 -= sampleFrames;
+		}
+	});
+	leftT.join();
+	rightT.join();
+	*/
+	
+	// filter the audio
+	if (samplesSinceSilence < deactivateAfterSamples && curIterations != 0) {
+		// without curIterations != 0 the code sets temp1&2 without processing leftLp etc
+		float *leftLp{ new float[sampleFrames] {} };
+		float *leftHp{ new float[sampleFrames] {} };
+		float *rightLp{ new float[sampleFrames] {} };
+		float *rightHp{ new float[sampleFrames] {} };
+
+		for (int i = 0; i < curIterations; i++) {
+			filterL[i].processBlock(temp1, leftHp, leftLp, sampleFrames);
+			filterR[i].processBlock(temp2, rightHp, rightLp, sampleFrames);
+			while (--samples >= 0) {
+				*temp1++ = (*leftLp++ + *leftHp++);
+				*temp2++ = (*rightLp++ + *rightHp++);
+			}
+			samples = sampleFrames;
+			temp1 -= sampleFrames;
+			temp2 -= sampleFrames;
+			leftLp -= sampleFrames;
+			leftHp -= sampleFrames;
+			rightLp -= sampleFrames;
+			rightHp -= sampleFrames;
+		}
+
+		delete[] leftLp;
+		delete[] leftHp;
+		delete[] rightLp;
+		delete[] rightHp;
 	}
 
-	in1 -= sampleFrames;
-	in2 -= sampleFrames;
-	while (--samples >= 0)
-	{	
-		//*out1 = *temp1 * fOut * 2;
-		//*out2 = *temp2 * fOut * 2;
-
+	while (--samples >= 0) {
 		// apply gain
 		float l = *temp1 * fOut * 2;
 		float r = *temp2 * fOut * 2;
@@ -308,22 +365,35 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 		// this is a temporary fix to unstable filters when automating them
 		// clips output to 0db for the first 2048 samples
 		// for the remainder 6144 out of the 8192 samples it clips to +9.6db if crossover < 400
+		if (samplesSinceSilence < deactivateAfterSamples) {
+			if (samplesSinceAdjustment > 6144 || fClip >= 0.5) {
+				*out1 = HardClip::process(l, 1);
+				*out2 = HardClip::process(r, 1);
 
-		if (samplesSinceAdjustment > 6144 || fClip >= 0.5) { // first 2048 samples after adjusting
-			*out1 = HardClip::process(l, 1);
-			*out2 = HardClip::process(r, 1);
+				samplesSinceAdjustment--;
+			}
+			else if (samplesSinceAdjustment > 0 && crossover < 400) {
+				*out1 = HardClip::process(l, 3);
+				*out2 = HardClip::process(r, 3);
 
-			samplesSinceAdjustment--;
-		}
-		else if (samplesSinceAdjustment > 0 || crossover < 400) {
-			*out1 = HardClip::process(l, 3);
-			*out2 = HardClip::process(r, 3);
-
-			samplesSinceAdjustment--;
+				samplesSinceAdjustment--;
+			}
+			else {
+				*out1 = l;
+				*out2 = r;
+			}
 		}
 		else {
 			*out1 = l;
 			*out2 = r;
+		}
+		
+		// if it sees anything that isn't silence, reset the silence counter
+		if (abs(*temp1) >= noiseFloor || abs(*temp2) >= noiseFloor) {
+			samplesSinceSilence = 0;
+		}
+		else if (samplesSinceSilence < 32768) { // int overflow protection
+			samplesSinceSilence++;
 		}
 
 		out1++;
