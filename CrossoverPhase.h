@@ -47,7 +47,7 @@ private:
 	float fFrequency;
 	float fIterations;
 	float fOut;
-	float fClip;
+	float fMix;
 	char name[24];
 };
 
@@ -88,7 +88,7 @@ protected:
 	CrossoverPhaseProgram *programs;
 	
 	float *buffer;
-	float fFrequency, fIterations, fOut, fClip;
+	float fFrequency, fIterations, fOut, fMix;
 	
 	long delay;
 	long size;

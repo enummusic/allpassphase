@@ -26,7 +26,7 @@ CrossoverPhaseProgram::CrossoverPhaseProgram ()
 	fFrequency = 0.3675f;
 	fIterations = 0.5;
 	fOut = 0.5;
-	fClip = 0;
+	fMix = 1;
 
 	strcpy (name, "Init");
 }
@@ -47,7 +47,7 @@ CrossoverPhase::CrossoverPhase (audioMasterCallback audioMaster)
 	fFrequency = 0.3675f;
 	fIterations = 0.5;
 	fOut = 0.5;
-	fClip = 0;
+	fMix = 1;
 
 	if (programs)
 		setProgram (0);
@@ -146,7 +146,7 @@ void CrossoverPhase::setParameter (VstInt32 index, float value)
 			break;
 		case kIterations : fIterations = ap->fIterations = value; break;
 		case kOut :      fOut = ap->fOut = value;			break;
-		case kClip:		fClip = ap->fClip = value;
+		case kClip:		fMix = ap->fMix = value;
 	}
 }
 
@@ -160,7 +160,7 @@ float CrossoverPhase::getParameter (VstInt32 index)
 		case kFrequency :    v = fFrequency;	break;
 		case kIterations : v = fIterations; break;
 		case kOut :      v = fOut;		break;
-		case kClip: v = fClip;
+		case kClip: v = fMix;
 	}
 	return v;
 }
@@ -173,7 +173,7 @@ void CrossoverPhase::getParameterName (VstInt32 index, char *label)
 		case kFrequency :    strcpy (label, "Frequency");		break;
 		case kIterations : strcpy (label, "Intensity");	break;
 		case kOut :      strcpy (label, "Volume");		break;
-		case kClip:      strcpy(label, "Hard clip");		break;
+		case kClip:      strcpy(label, "Mix");		break;
 	}
 }
 
@@ -206,12 +206,13 @@ void CrossoverPhase::getParameterDisplay (VstInt32 index, char *text)
 			mydB2string (fOut, text, kVstMaxParamStrLen);
 			break;
 		case kClip:
-			if (fClip >= 0.5) {
-				strcpy(text, "ON");
+			if (fMix == 0) {
+				strcpy(text, "0");
 			}
 			else {
-				strcpy(text, "OFF");
+				int2string(fMix * 100, text, 3);
 			}
+			break;
 	}
 }
 
@@ -223,7 +224,7 @@ void CrossoverPhase::getParameterLabel (VstInt32 index, char *label)
 		case kFrequency :    strcpy (label, "Hz");	break;//samples
 		case kIterations : strcpy (label, "iterations");	break;//amount
 		case kOut :      strcpy (label, "dB");		break;
-		case kClip:      strcpy(label, " ");		break;
+		case kClip:      strcpy(label, "%");		break;
 		//case kClip:      float2string(dbginfo, label, kVstMaxParamStrLen);		break;
 	}
 }
@@ -294,7 +295,7 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 	samples = sampleFrames;
 	
 	// filter the audio
-	if (samplesSinceSilence < deactivateAfterSamples && curIterations != 0) {
+	if (samplesSinceSilence < deactivateAfterSamples && curIterations != 0 && fMix > 0) {
 		// without curIterations != 0 the code sets temp1&2 without processing leftLp etc
 		float *leftLp{ new float[sampleFrames] {} };
 		float *leftHp{ new float[sampleFrames] {} };
@@ -323,19 +324,13 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 		delete[] rightHp;
 	}
 
+	in1 -= sampleFrames;
+	in2 -= sampleFrames;
+
 	while (--samples >= 0) {
 		// apply gain
-		float l = *temp1 * fOut * 2;
-		float r = *temp2 * fOut * 2;
-
-		if (fClip >= 0.5 && samplesSinceSilence < deactivateAfterSamples) {
-			*out1 = HardClip::process(l, 1);
-			*out2 = HardClip::process(r, 1);
-		}
-		else {
-			*out1 = l;
-			*out2 = r;
-		}
+		float l = *temp1 * fOut * 2 * fMix;
+		float r = *temp2 * fOut * 2 * fMix;
 		
 		// if it sees anything that isn't silence, reset the silence counter
 		if (abs(*temp1) >= noiseFloor || abs(*temp2) >= noiseFloor) {
@@ -345,6 +340,11 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 			samplesSinceSilence++;
 		}
 
+		*out1 = l + *in1 * (1 - fMix);
+		*out2 = r + *in2 * (1 - fMix);
+
+		in1++;
+		in2++;
 		out1++;
 		out2++;
 		temp1++;
