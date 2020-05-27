@@ -23,10 +23,10 @@
 CrossoverPhaseProgram::CrossoverPhaseProgram ()
 {
 	// default Program Values
-	fFrequency = 0.365f;
+	fFrequency = 0.36f;
 	fIterations = 0.5;
 	fOut = 0.5;
-	fClip = 1;
+	fClip = 0;
 
 	strcpy (name, "Init");
 }
@@ -44,10 +44,10 @@ CrossoverPhase::CrossoverPhase (audioMasterCallback audioMaster)
 	
 	programs = new CrossoverPhaseProgram[numPrograms];
 	//fFrequency = fIterations = fOut = 0;
-	fFrequency = 0.365f;
+	fFrequency = 0.36f;
 	fIterations = 0.5;
 	fOut = 0.5;
-	fClip = 1;
+	fClip = 0;
 
 	if (programs)
 		setProgram (0);
@@ -263,7 +263,6 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 			filterR[i].copyCoefficientsFrom(filterR[0]);
 		}
 		curIterations = fIterations * 50;
-		samplesSinceAdjustment = 8192;
 	}
 
 	float* in1 = inputs[0];
@@ -293,39 +292,6 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 	temp1 -= sampleFrames;
 	temp2 -= sampleFrames;
 	samples = sampleFrames;
-	
-	// multithreading actually increases CPU overhead
-	// by the repeated creation and destruction of threads during every incoming buffer
-	// so it isn't worth it
-	/*
-	std::thread leftT([this, temp1, &leftHp, &leftLp, sampleFrames]() mutable {
-		int s = sampleFrames;
-		for (int i = 0; i < curIterations; i++) {
-			while (--s >= 0)
-			{
-				filterL[i].process(*temp1, &leftHp, &leftLp);
-				*temp1++ = (leftLp + leftHp);
-			}
-			s = sampleFrames;
-			temp1 -= sampleFrames;
-		}
-	});
-
-	std::thread rightT([this, temp2, &rightHp, &rightLp, sampleFrames]() mutable {
-		int s = sampleFrames;
-		for (int i = 0; i < curIterations; i++) {
-			while (--s >= 0)
-			{
-				filterR[i].process(*temp2, &rightHp, &rightLp);
-				*temp2++ = (rightLp + rightHp);
-			}
-			s = sampleFrames;
-			temp2 -= sampleFrames;
-		}
-	});
-	leftT.join();
-	rightT.join();
-	*/
 	
 	// filter the audio
 	if (samplesSinceSilence < deactivateAfterSamples && curIterations != 0) {
@@ -362,26 +328,9 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 		float l = *temp1 * fOut * 2;
 		float r = *temp2 * fOut * 2;
 
-		// this is a temporary fix to unstable filters when automating them
-		// clips output to 0db for the first 2048 samples
-		// for the remainder 6144 out of the 8192 samples it clips to +9.6db if crossover < 400
-		if (samplesSinceSilence < deactivateAfterSamples) {
-			if (samplesSinceAdjustment > 6144 || fClip >= 0.5) {
-				*out1 = HardClip::process(l, 1);
-				*out2 = HardClip::process(r, 1);
-
-				samplesSinceAdjustment--;
-			}
-			else if (samplesSinceAdjustment > 0 && crossover < 400) {
-				*out1 = HardClip::process(l, 3);
-				*out2 = HardClip::process(r, 3);
-
-				samplesSinceAdjustment--;
-			}
-			else {
-				*out1 = l;
-				*out2 = r;
-			}
+		if (fClip >= 0.5 && samplesSinceSilence < deactivateAfterSamples) {
+			*out1 = HardClip::process(l, 1);
+			*out2 = HardClip::process(r, 1);
 		}
 		else {
 			*out1 = l;

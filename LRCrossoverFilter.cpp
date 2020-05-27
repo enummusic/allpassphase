@@ -58,7 +58,7 @@ void LRCrossoverFilter::setup(float crossoverFrequency, float sr) {
 	hpco.a3 = hpco.a1;
 	hpco.a4 = hpco.a0;
 
-
+	zeroBuffers();
 }
 
 void LRCrossoverFilter::copyCoefficientsFrom(LRCrossoverFilter filter) {
@@ -78,6 +78,23 @@ void LRCrossoverFilter::copyCoefficientsFrom(LRCrossoverFilter filter) {
 	b2co = filter.b2co;
 	b3co = filter.b3co;
 	b4co = filter.b4co;
+
+	zeroBuffers();
+}
+
+void LRCrossoverFilter::zeroBuffers() {
+	hptemp.ym1 = 0;
+	hptemp.ym2 = 0;
+	hptemp.ym3 = 0;
+	hptemp.ym4 = 0;
+	lptemp.ym1 = 0;
+	lptemp.ym2 = 0;
+	lptemp.ym3 = 0;
+	lptemp.ym4 = 0;
+	temp.xm1 = 0;
+	temp.xm2 = 0;
+	temp.xm3 = 0;
+	temp.xm4 = 0;
 }
 
 void LRCrossoverFilter::processBlock(float * in, float * outHP, float * outLP, int numSamples) {

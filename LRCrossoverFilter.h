@@ -31,6 +31,7 @@ private:
 public:
 	void setup(float crossoverFrequency, float sr);
 	void copyCoefficientsFrom(LRCrossoverFilter filter);
+	void zeroBuffers();
 	void processBlock(float * in, float * outHP, float * outLP, int numSamples);
 	float getCrossover() {
 		return coFreqRunningAv;
