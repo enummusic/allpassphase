@@ -23,7 +23,7 @@
 CrossoverPhaseProgram::CrossoverPhaseProgram ()
 {
 	// default Program Values
-	fFrequency = 0.36f;
+	fFrequency = 0.3675f;
 	fIterations = 0.5;
 	fOut = 0.5;
 	fClip = 0;
@@ -44,7 +44,7 @@ CrossoverPhase::CrossoverPhase (audioMasterCallback audioMaster)
 	
 	programs = new CrossoverPhaseProgram[numPrograms];
 	//fFrequency = fIterations = fOut = 0;
-	fFrequency = 0.36f;
+	fFrequency = 0.3675f;
 	fIterations = 0.5;
 	fOut = 0.5;
 	fClip = 0;
