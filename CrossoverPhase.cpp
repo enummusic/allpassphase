@@ -38,12 +38,9 @@ CrossoverPhase::CrossoverPhase (audioMasterCallback audioMaster)
 	// init
 	
 	size = 44100;
-	cursor = 0;
-	delay = 0;
 	buffer = new float[size];
 	
 	programs = new CrossoverPhaseProgram[numPrograms];
-	//fFrequency = fIterations = fOut = 0;
 	fFrequency = 0.3675f;
 	fIterations = 0.5;
 	fOut = 0.5;
@@ -57,7 +54,6 @@ CrossoverPhase::CrossoverPhase (audioMasterCallback audioMaster)
 
 	setUniqueID ('Xphs');
 
-	//
 	curIterations = 25;
 	crossover = pow(200, fFrequency) * 100;
 	filterL[0].setup(crossover, 44100.0f);
@@ -66,7 +62,6 @@ CrossoverPhase::CrossoverPhase (audioMasterCallback audioMaster)
 		filterL[i].copyCoefficientsFrom(filterL[0]);
 		filterR[i].copyCoefficientsFrom(filterR[0]);
 	}
-	//
 
 	resume ();		// flush buffer
 }
@@ -89,15 +84,6 @@ void CrossoverPhase::setProgram (long program)
 	setParameter (kFrequency, ap->fFrequency);	
 	setParameter (kIterations, ap->fIterations);
 	setParameter (kOut, ap->fOut);
-}
-
-//------------------------------------------------------------------------
-void CrossoverPhase::setDelay (float fdelay)
-{
-	fFrequency = fdelay;
-	programs[curProgram].fFrequency = fdelay;
-	cursor = 0;
-	delay = (long)(fdelay * (float)(size - 1));
 }
 
 //------------------------------------------------------------------------
@@ -251,7 +237,6 @@ bool CrossoverPhase::getVendorString (char* text)
 }
 
 //---------------------------------------------------------------------------
-// typedef int VstInt32;
 void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames)
 {
 	// setup filter coefficients
@@ -328,10 +313,7 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 	in2 -= sampleFrames;
 
 	while (--samples >= 0) {
-		// apply gain
-		float l = *temp1 * fOut * 2 * fMix;
-		float r = *temp2 * fOut * 2 * fMix;
-		
+
 		// if it sees anything that isn't silence, reset the silence counter
 		if (abs(*temp1) >= noiseFloor || abs(*temp2) >= noiseFloor) {
 			samplesSinceSilence = 0;
@@ -340,8 +322,8 @@ void CrossoverPhase::processReplacing (float** inputs, float** outputs, VstInt32
 			samplesSinceSilence++;
 		}
 
-		*out1 = l + *in1 * (1 - fMix);
-		*out2 = r + *in2 * (1 - fMix);
+		*out1 = (*temp1 * fMix + *in1 * (1 - fMix)) * fOut * 2;
+		*out2 = (*temp2 * fMix + *in2 * (1 - fMix)) * fOut * 2;
 
 		in1++;
 		in2++;

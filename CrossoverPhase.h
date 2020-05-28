@@ -83,19 +83,13 @@ public:
 	virtual VstPlugCategory getPlugCategory () { return kPlugCategEffect; }
 
 protected:
-	void setDelay (float delay);
-
 	CrossoverPhaseProgram *programs;
 	
 	float *buffer;
 	float fFrequency, fIterations, fOut, fMix;
-	
-	long delay;
-	long size;
-	long cursor;
 
-	LRCrossoverFilter filter1;
-	LRCrossoverFilter filter2;
+	long size;
+
 	LRCrossoverFilter filterL[50];
 	LRCrossoverFilter filterR[50];
 	int crossover;

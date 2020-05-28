@@ -4,8 +4,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
-#include <assert.h>
-#include <thread>
 
 #include "LRCrossoverFilter.h"
 
