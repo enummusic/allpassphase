@@ -1,18 +1,17 @@
-<h1>CrossoverPhase VST</h1>
+<h1>AllPassPhase VST</h1>
 
 <h3>What it does</h3>
 
-It creates phase dispersion and leads to a less phase-coherent sound. It gives a laser zap sound to soften transients.
-To achieve this, it does band splitting repeatedly through low pass and high pass filters, with both bands summed back together after every iteration, thus creating a giant phase shift.
-
-This plugin uses 4th order Linkwitz-Riley filters, commonly used in multiband processors due to its nature of retaining the spectral content of the audio (they sum back to all pass). Usually the phase shift associated with multiband processing is undesirable, but in this case, this characteristic is abused for the effect.
+It creates phase dispersion and leads to a less phase-coherent sound.
+It gives a laser zap sound to soften transients, or gives a unique character to bass sounds.
+To achieve this, it repeatedly runs the audio through all pass filters, thus creating a giant phase shift.
 
 <h3>Knobs</h3>
 
-- Frequency: controls the cutoff of the filters. It affects the frequencies around the cutoff the most.
-- Intensity: controls how many times the audio is run through the filters. The higher the number, the more CPU usage.
-- Volume: self explanatory
-- Mix: dry/wet mix, can be used to create phaser type effects.
+- Frequency: Controls the frequency of the filters. It affects the frequencies around the value the most.
+- Q: The "pinch" of the filters. The smaller the Q, the more pronounced the dispersion.
+- Intensity: Controls how many times the audio is run through the filters. The higher the number, the more CPU usage.
+- Mix: Dry/wet mix, can be used to create phaser type effects.
 
 <h3>Installation</h3>
 
@@ -20,7 +19,7 @@ Always check your downloads at virustotal.com to make sure they have not been co
 
 <h4>Windows</h4>
 
-Simply copy the provided `CrossoverPhase.dll` to your preferred VST installation location.
+Simply copy the provided `AllPassPhase.dll` to your preferred VST installation location.
 
 <h3>Compiling from source</h3>
 

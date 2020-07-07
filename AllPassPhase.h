@@ -1,21 +1,22 @@
 //-------------------------------------------------------------------------------------------------------
 // $Date: 2020/05/24 00:00:00 $
 //
-// Filename     : CrossoverPhase.h
+// Filename     : AllPassPhase.h
 // Created by   : enummusic
 // Description  : Crossover filter phase dispersion
 //
-// Â© 2020 enummusic
-// VST SDK Â© 2005, Steinberg Media Technologies, All Rights Reserved
+// © 2020 enummusic
+// VST SDK © 2005, Steinberg Media Technologies, All Rights Reserved
 //-------------------------------------------------------------------------------------------------------
 
-#ifndef __CrossoverPhase__
-#define __CrossoverPhase__
+#ifndef __AllPassPhase__
+#define __AllPassPhase__
 
 #include <string>
 
 #include "public.sdk/source/vst2.x/audioeffectx.h"
-#include "LRCrossoverFilter.h"
+//#include "LRCrossoverFilter.h"
+#include "AllPassFilter.h"
 
 //class LRCrossoverFilter;
 
@@ -26,25 +27,27 @@ enum
 
 	// Parameters Tags
 	kFrequency = 0,
+	kQ,
 	kIterations,
-	kOut,
+	//kOut,
 	kClip,
 
 	kNumParams
 };
 
-class CrossoverPhase;
+class AllPassPhase;
 
 //------------------------------------------------------------------------
-class CrossoverPhaseProgram
+class AllPassPhaseProgram
 {
-friend class CrossoverPhase;
+friend class AllPassPhase;
 public:
-	CrossoverPhaseProgram ();
-	~CrossoverPhaseProgram () {}
+	AllPassPhaseProgram ();
+	~AllPassPhaseProgram () {}
 
 private:	
 	float fFrequency;
+	float fQ; // get it?? lmao
 	float fIterations;
 	float fOut;
 	float fMix;
@@ -52,11 +55,11 @@ private:
 };
 
 //------------------------------------------------------------------------
-class CrossoverPhase : public AudioEffectX
+class AllPassPhase : public AudioEffectX
 {
 public:
-	CrossoverPhase (audioMasterCallback audioMaster);
-	~CrossoverPhase ();
+	AllPassPhase (audioMasterCallback audioMaster);
+	~AllPassPhase ();
 
 	virtual void processReplacing (float **inputs, float **outputs, VstInt32 sampleFrames);
 
@@ -73,6 +76,8 @@ public:
 
 	void mydB2string(float value, char * text, VstInt32 maxLen);
 
+	int knobToFrequency(float x);
+
 	virtual void resume ();
 
 	virtual bool getEffectName (char* name);
@@ -83,17 +88,18 @@ public:
 	virtual VstPlugCategory getPlugCategory () { return kPlugCategEffect; }
 
 protected:
-	CrossoverPhaseProgram *programs;
+	AllPassPhaseProgram *programs;
 	
 	float *buffer;
-	float fFrequency, fIterations, fOut, fMix;
+	float fFrequency, fIterations, fQ, fOut, fMix;
 
 	long size;
 
-	LRCrossoverFilter filterL[50];
-	LRCrossoverFilter filterR[50];
-	int crossover;
+	AllPassFilter filterL[50];
+	AllPassFilter filterR[50];
+	int freq;
 	int curIterations;
+	float q;
 
 	int samplesSinceSilence = 1;
 	const int deactivateAfterSamples = 16384;
