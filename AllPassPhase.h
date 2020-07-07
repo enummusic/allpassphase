@@ -30,7 +30,7 @@ enum
 	kQ,
 	kIterations,
 	//kOut,
-	kClip,
+	kMix,
 
 	kNumParams
 };
@@ -69,6 +69,7 @@ public:
 	virtual bool getProgramNameIndexed (VstInt32 category, VstInt32 index, char* text);
 	
 	virtual void setParameter (VstInt32 index, float value);
+	void setupFilters();
 	virtual float getParameter (VstInt32 index);
 	virtual void getParameterLabel (VstInt32 index, char *label);
 	virtual void getParameterDisplay (VstInt32 index, char *text);

@@ -11,7 +11,7 @@
 class AllPassFilter {
 private:
 
-	// coefficient calculations are all changed to double
+	// coefficient calculations need to be in double
 	// for filter stability at low frequencies
 	double tempx, tempyH, tempyL;
 	struct filterCoefficents {

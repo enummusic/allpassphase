@@ -59,12 +59,7 @@ AllPassPhase::AllPassPhase (audioMasterCallback audioMaster)
 	curIterations = 25;
 	freq = pow(200, fFrequency) * 100;
 	q = fQ * sqrt(2);
-	filterL[0].setup(freq, 44100.0f, q);
-	filterR[0].setup(freq, 44100.0f, q);
-	for (int i = 0; i < 50; i++) {
-		filterL[i].copyCoefficientsFrom(filterL[0]);
-		filterR[i].copyCoefficientsFrom(filterR[0]);
-	}
+	setupFilters();
 
 	resume ();		// flush buffer
 }
@@ -132,11 +127,25 @@ void AllPassPhase::setParameter (VstInt32 index, float value)
 		case kFrequency:    
 			fFrequency = ap->fFrequency = value;
 			programs[curProgram].fFrequency = value;
+			setupFilters();
 			break;
-		case kQ:		fQ = ap->fQ = value; break;
-		case kIterations : fIterations = ap->fIterations = value; break;
+		case kQ:		fQ = ap->fQ = value; setupFilters(); break;
+		case kIterations : fIterations = ap->fIterations = value;  break;
 		//case kOut :      fOut = ap->fOut = value;			break;
-		case kClip:		fMix = ap->fMix = value;
+		case kMix:		fMix = ap->fMix = value;
+	}
+}
+
+void AllPassPhase::setupFilters() {
+	freq = knobToFrequency(fFrequency);
+	q = fQ * sqrt(2);
+	// no, I am not allowing filter self oscillation. it is dangerous for your ears
+	if (q <= 0.005) q = 0.005;
+	filterL[0].setup(freq, 44100.0f, q);
+	filterR[0].setup(freq, 44100.0f, q);
+	for (int i = 0; i < fIterations * 50; i++) {
+		filterL[i].copyCoefficientsFrom(filterL[0]);
+		filterR[i].copyCoefficientsFrom(filterR[0]);
 	}
 }
 
@@ -151,7 +160,7 @@ float AllPassPhase::getParameter (VstInt32 index)
 		case kQ : v = fQ; break;
 		case kIterations : v = fIterations; break;
 		//case kOut :      v = fOut;		break;
-		case kClip: v = fMix;
+		case kMix: v = fMix;
 	}
 	return v;
 }
@@ -165,7 +174,7 @@ void AllPassPhase::getParameterName (VstInt32 index, char *label)
 		case kQ : strcpy (label, "Q");	break;
 		case kIterations : strcpy (label, "Intensity");	break;
 		//case kOut :      strcpy (label, "Volume");		break;
-		case kClip:      strcpy(label, "Mix");		break;
+		case kMix:      strcpy(label, "Mix");		break;
 	}
 }
 
@@ -207,7 +216,7 @@ void AllPassPhase::getParameterDisplay (VstInt32 index, char *text)
 			mydB2string (fOut, text, 4);
 			break;
 		*/
-		case kClip:
+		case kMix:
 			if (fMix == 0) {
 				strcpy(text, "0");
 			}
@@ -227,7 +236,7 @@ void AllPassPhase::getParameterLabel (VstInt32 index, char *label)
 		case kQ : strcpy(label, " ");	break;//samples
 		case kIterations : strcpy (label, "iterations");	break;//amount
 		//case kOut :      strcpy (label, "dB");		break;
-		case kClip:      strcpy(label, "%");		break;
+		case kMix:      strcpy(label, "%");		break;
 		//case kClip:      float2string(dbginfo, label, kVstMaxParamStrLen);		break;
 	}
 }
@@ -256,18 +265,19 @@ bool AllPassPhase::getVendorString (char* text)
 //---------------------------------------------------------------------------
 void AllPassPhase::processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames)
 {
-	// setup filter coefficients
-	freq = knobToFrequency(fFrequency);
-	q = fQ * sqrt(2);
-	if (filterL[0].getFreq() != freq ||
-		(int) (fIterations * 50) != curIterations ||
-		filterL[0].getQ() != q) {
-		filterL[0].setup(freq, 44100.0f, q);
-		filterR[0].setup(freq, 44100.0f, q);
-		for (int i = 0; i < fIterations * 50; i++)	{
-			filterL[i].copyCoefficientsFrom(filterL[0]);
-			filterR[i].copyCoefficientsFrom(filterR[0]);
+	if ((int)(fIterations * 50) > curIterations) {
+		if (curIterations > 0) {
+			for (int i = curIterations - 1; i < fIterations * 50; i++) {
+				filterL[i].copyCoefficientsFrom(filterL[curIterations - 1]);
+				filterR[i].copyCoefficientsFrom(filterR[curIterations - 1]);
+			}
 		}
+		else {
+			setupFilters();
+		}
+		curIterations = fIterations * 50;
+	}
+	else if ((int)(fIterations * 50) < curIterations) {
 		curIterations = fIterations * 50;
 	}
 
