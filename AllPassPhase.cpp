@@ -5,8 +5,8 @@
 // Created by   : enummusic
 // Description  : Crossover filter phase dispersion
 //
-// © 2020 enummusic
-// VST SDK © 2005, Steinberg Media Technologies, All Rights Reserved
+// Â© 2020 enummusic
+// VST SDK Â© 2005, Steinberg Media Technologies, All Rights Reserved
 //-------------------------------------------------------------------------------------------------------
 
 #include <stdio.h>
