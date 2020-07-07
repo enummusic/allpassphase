@@ -176,6 +176,8 @@ void AllPassPhase::mydB2string(float value, char* text, VstInt32 maxLen)
 	else
 		float2string((float)(20. * log10(value * 2)), text, maxLen);
 }
+
+// https://www.musicdsp.org/en/latest/Other/260-exponential-curve-for.html
 int AllPassPhase::knobToFrequency(float x) {
 	return floor(exp((16 + x * 100 * 1.20103)*log(1.059))*8.17742);
 }

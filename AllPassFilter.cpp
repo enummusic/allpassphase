@@ -1,6 +1,7 @@
+// code referenced:
 // https://www.musicdsp.org/en/latest/Filters/197-rbj-audio-eq-cookbook.html
+// https://www.musicdsp.org/en/latest/Filters/64-biquad-c-code.html
 // https://www.musicdsp.org/en/latest/Filters/266-4th-order-linkwitz-riley-filters.html
-// © All credits go to the contributors at musicdsp.org
 
 #include <iostream>
 #include <stdio.h>
