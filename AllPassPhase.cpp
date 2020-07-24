@@ -149,6 +149,7 @@ void AllPassPhase::setupFilters() {
 	for (int i = 1; i < fIterations * 50; i++) {
 		filterL[i].copyCoefficientsFrom(filterL[0]);
 		filterR[i].copyCoefficientsFrom(filterR[0]);
+		// attempt to prevent the filters from generating noise that could damage audio equipment
 		if (abs(fFrequency - lastfFreq) > fFrequency / 10 && freq < 500) {//abs(freq - oldFreq) > 25
 			filterL[i].zeroBuffers();
 			filterR[i].zeroBuffers();

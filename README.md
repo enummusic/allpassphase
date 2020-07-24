@@ -5,11 +5,15 @@
 It creates phase dispersion and leads to a less phase-coherent sound.
 It gives a laser zap sound to soften transients, or gives a unique character to bass sounds.
 To achieve this, it repeatedly runs the audio through all pass filters, thus creating a giant phase shift.
+Note: there is no custom GUI. The interface is provided by the host.
 
 <h3>Knobs</h3>
 
-- Frequency: Controls the frequency of the filters. It affects the frequencies around the value the most.
-- Q: The "pinch" of the filters. The smaller the Q, the more pronounced the dispersion.
+- Frequency: Controls the frequency of the filters. It affects the frequencies around the value the most. 
+Because of the nature of the filters, modulating the frequency knob too quickly is not recommended, 
+even though I have attempted to prevent this from happening when the frequency is below 500hz.
+- Q: The "pinch" of the filters. The smaller the Q, the more pronounced the dispersion near the frequency. 
+Note that when Q<sub>knob</sub>=0, Q<sub>true</sub>=0.005.
 - Intensity: Controls how many times the audio is run through the filters. The higher the number, the more CPU usage.
 - Mix: Dry/wet mix, can be used to create phaser type effects.
 
@@ -19,7 +23,7 @@ Always check your downloads at virustotal.com to make sure they have not been co
 
 <h4>Windows</h4>
 
-Simply copy the provided `AllPassPhase.dll` to your preferred VST installation location.
+Simply copy the provided `AllPassPhase.dll` or `AllPassPhase_x64.dll` to your preferred VST installation location.
 
 <h3>Compiling from source</h3>
 
