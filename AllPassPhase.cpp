@@ -128,6 +128,7 @@ void AllPassPhase::setParameter (VstInt32 index, float value)
 			fFrequency = ap->fFrequency = value;
 			programs[curProgram].fFrequency = value;
 			setupFilters();
+			lastfFreq = fFrequency;
 			break;
 		case kQ:		fQ = ap->fQ = value; setupFilters(); break;
 		case kIterations : fIterations = ap->fIterations = value;  break;
@@ -139,13 +140,19 @@ void AllPassPhase::setParameter (VstInt32 index, float value)
 void AllPassPhase::setupFilters() {
 	freq = knobToFrequency(fFrequency);
 	q = fQ * sqrt(2);
+	int oldFreq = filterL[0].getFreq();
 	// no, I am not allowing filter self oscillation. it is dangerous for your ears
 	if (q <= 0.005) q = 0.005;
 	filterL[0].setup(freq, 44100.0f, q);
 	filterR[0].setup(freq, 44100.0f, q);
-	for (int i = 0; i < fIterations * 50; i++) {
+	
+	for (int i = 1; i < fIterations * 50; i++) {
 		filterL[i].copyCoefficientsFrom(filterL[0]);
 		filterR[i].copyCoefficientsFrom(filterR[0]);
+		if (abs(fFrequency - lastfFreq) > fFrequency / 10 && freq < 500) {//abs(freq - oldFreq) > 25
+			filterL[i].zeroBuffers();
+			filterR[i].zeroBuffers();
+		}
 	}
 }
 

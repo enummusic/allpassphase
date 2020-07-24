@@ -46,7 +46,7 @@ void AllPassFilter::setup(float freq, float sr, float q) {
 	co.c3 = a1 / a0;
 	co.c4 = a2 / a0;
 
-	zeroBuffers();
+	//zeroBuffers();
 }
 
 void AllPassFilter::copyCoefficientsFrom(AllPassFilter filter) {
@@ -56,7 +56,7 @@ void AllPassFilter::copyCoefficientsFrom(AllPassFilter filter) {
 	co.c3 = filter.co.c3;
 	co.c4 = filter.co.c4;
 
-	zeroBuffers();
+	//zeroBuffers();
 }
 
 void AllPassFilter::zeroBuffers() {

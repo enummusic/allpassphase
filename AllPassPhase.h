@@ -105,7 +105,7 @@ protected:
 	int samplesSinceSilence = 1;
 	const int deactivateAfterSamples = 16384;
 	const float noiseFloor = 0.000007; // -113dB ish, idk it just works lol
-
+	float lastfFreq = 0;
 	//float dbginfo = 0;
 };
 
