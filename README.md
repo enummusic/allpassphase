@@ -25,6 +25,10 @@ Always check your downloads at virustotal.com to make sure they have not been co
 
 Simply copy the provided `AllPassPhase.dll` or `AllPassPhase_x64.dll` to your preferred VST installation location.
 
+<h4>Mac</h4>
+
+Copy the provided `allpassphase.vst` to `/Library/Audio/Plug-Ins/VST`.
+
 <h3>Compiling from source</h3>
 
 <h4>Windows</h4>
