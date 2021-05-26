@@ -43,3 +43,19 @@ Make sure "Configuration Properties > General > Target Name" is set to Crossover
 (or leave it as $ProjectName if you renamed the project to that), 
 and "Configuration Type" is set to "Dynamic Library (.dll)".
 8. Build it. Your .dll file will be under `public.sdk/samples/vst2.x/aDelay - Copy/win/Debug`.
+
+
+<h4>Mac</h4>
+
+This assumes you are using XCode and have the VST2 SDK (which I cannot include for copyright reasons)
+1. Make a copy of the provided aDelay folder under `public.sdk/samples/vst2.x` and paste it under `vst2.x` and rename to `allpassphase`
+(Under `vst2.x` you would have `aDelay` and `allpassphase` or whatever you named it).
+2. Remove the files `aDelay.cpp/h` and `surroundDelay.cpp/h`. `adelaymain.cpp` will be overwritten later.
+3. Copy in all the source files from this repo, navigate to the `vstsdk2.4/public.sdk/samples/mac` folder.
+4. Launch the xcodeproj file. In the bottom left of the window there should be a +, select Add Files to "vst2.4 examples", add the new `allpassphase` folder to it.
+5. Double-click `vst2.4 examples` in the left browser, then in the Project/Target pane select Project > vst2.4 examples, and under Build Settings > Base SDK, select macOS. By default it uses a deprecated OSX SDK.
+6. Right click `adelay` under Targets in the Project/Target pane, select Duplicate. Double click and rename the new copy to `allpassphase`. This affects the naming of the generated .vst file.
+7. Go to Build Settings > Apple Clang - Language - C++ > C++ Language Dialect, change it to C++ 17.
+8. Go back to the project browser, navigate to `allpassphase` and select all the .cpp files, and on the right pane under "Target Membership" select the "allpassphase" checkbox. Navigate to `adelay` and select the .cpp files and deselect "allpassphase".
+9. Build it (make sure you are building the correct portion of the project, it might show up as adelay copy before you restart), and it will complain about a casting error from the (ancient) VST SDK code. Apply the recommended fix. (I couldn't find another way to compile without changing my own source code or the SDK's)
+10. Build it again. Your .vst file can be found by going to the top bar, Product > Reveal Build Products Folder, under `Debug`.
